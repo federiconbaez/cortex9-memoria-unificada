@@ -258,6 +258,7 @@ static std::map<std::string, std::function<void()>> tests = {
          CHECK(static_cast<std::uint8_t>(t.data[10]) == tt::expected(23, 10));
          pid_t pid = fork();
          if (pid == 0) {
+             tt::temp_files().clear();  // el hijo no borra los archivos del padre
              struct sigaction sa {};
              sa.sa_handler = [](int) { _exit(77); };
              sigaction(SIGSEGV, &sa, nullptr);
@@ -274,7 +275,7 @@ static std::map<std::string, std::function<void()>> tests = {
          // En modo UFFD_USER_MODE_ONLY ese fallo NO se atiende: write() devuelve EFAULT.
          TierManager m(small_cfg());
          auto t = m.map_tensor(tt::make_file("t_sys.bin", 1 << 20, 24));
-         std::string out = "t_sys_out.bin";
+         std::string out = "t_sys_out.bin." + std::to_string(::getpid());
          int fd = ::open(out.c_str(), O_CREAT | O_TRUNC | O_RDWR | O_CLOEXEC, 0644);
          CHECK(fd >= 0);
          ssize_t w = ::write(fd, t.data + 128 * 1024, 4096);  // bloque aún no residente

@@ -20,10 +20,28 @@ inline std::uint64_t splitmix(std::uint64_t x) {
 inline std::uint8_t expected(std::uint64_t seed, std::uint64_t off) {
     return static_cast<std::uint8_t>(splitmix(seed ^ (off / 8)) >> (8 * (off % 8)));
 }
+// Archivos temporales de las pruebas: se borran al salir del proceso.
+inline std::vector<std::string>& temp_files() {
+    static std::vector<std::string> v;
+    return v;
+}
+inline void remove_temp_files() {
+    for (auto& p : temp_files()) ::unlink(p.c_str());
+}
+
 // Crea un archivo de 'size' bytes con contenido determinista. Devuelve la ruta.
+// Con un nombre relativo, el archivo lleva el PID (varias corridas simultáneas en el mismo
+// directorio no se pisan) y se borra al terminar. Una ruta absoluta se usa tal cual
+// (el benchmark reutiliza su archivo).
 inline std::string make_file(const std::string& name, std::uint64_t size, std::uint64_t seed) {
     const char* dir = std::getenv("TIERMEM_TEST_DIR");
-    std::string path = name.starts_with("/") ? name : std::string(dir ? dir : ".") + "/" + name;
+    std::string path = name.starts_with("/")
+                           ? name
+                           : std::string(dir ? dir : ".") + "/" + name + "." + std::to_string(::getpid());
+    if (!name.starts_with("/")) {
+        if (temp_files().empty()) std::atexit(remove_temp_files);
+        temp_files().push_back(path);
+    }
     int fd = ::open(path.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_CLOEXEC, 0644);
     if (fd < 0) { std::perror("open"); std::exit(2); }
     std::vector<std::uint8_t> buf(1 << 20);

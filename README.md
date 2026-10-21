@@ -38,6 +38,8 @@ kernel *antes* de lanzarlo. Esa API ya existe y está probada en CPU (`prefetch_
   2. si está en el nivel host → lo copia al rango (`UFFDIO_COPY`);
   3. si no, lo lee del archivo **en un único lote** junto con los siguientes
      `prefetch_chunks` bloques (sólo si el acceso viene siendo secuencial).
+  La página se instala con `UFFDIO_COPY_MODE_DONTWAKE`, y el hilo que falló se despierta
+  (`UFFDIO_WAKE`) recién cuando toda la contabilidad está actualizada.
 - Antes de instalar, si el nivel dispositivo superaría su tope, expulsa con **CLOCK
   (segunda oportunidad)**: degrada el bloque a host y hace `MADV_DONTNEED`. El próximo acceso
   vuelve a fallar y se atiende desde host.
@@ -100,8 +102,15 @@ Sanitizers: `-DTIERMEM_SANITIZE=ON` (ASan+UBSan) y `-DTIERMEM_TSAN=ON` (ThreadSa
 | `syscall_sobre_rango` | comportamiento documentado de `EFAULT` en `UFFD_USER_MODE_ONLY` |
 | `sin_nivel_host` | funciona con nivel host = 0 |
 
-Resultado medido el 20/10/2026 (UTC-3): 15/15 en 3 corridas seguidas (Release), 15/15 con
-ASan+UBSan, 15/15 con TSan, sin reportes de los sanitizers. Ver `VERIFICACION.md`.
+Resultado medido el 21/10/2026 (UTC-3), **con `stress-ng --cpu 8` corriendo en paralelo**:
+`ctest` 20/20 corridas en verde (Release), 5/5 con ASan+UBSan y 5/5 con TSan, sin reportes
+de los sanitizers. `./verificar.sh` terminó con código 0 las dos veces. Ver `VERIFICACION.md`.
+
+**Error corregido:** hasta el commit `7c08313`, `fault_secuencial` fallaba bajo carga (4 de
+30 corridas). La causa era un error real de orden: `UFFDIO_COPY` despertaba al hilo antes de
+que el manejador actualizara su contabilidad. Ahora la página se instala con
+`UFFDIO_COPY_MODE_DONTWAKE` y se despierta al hilo con `UFFDIO_WAKE` recién al final.
+Detalle completo en `VERIFICACION.md`, sección 5.
 
 ## Números medidos en esta máquina
 
@@ -137,6 +146,9 @@ Lectura honesta de los números:
   desde disco y **~60 000 fallos/s** desde host. Esa cifra es el techo del manejador actual.
 - **No escala con hilos:** hay un único hilo manejador, y con 8 hilos consumidores desde host
   rinde *menos* que con 1. Paralelizar el manejador está pendiente.
+- Una 3.ª corrida, después del arreglo de orden (un `UFFDIO_WAKE` extra por fallo), dio
+  los mismos fallos/s en las filas limitadas por CPU (4 KiB: 26 545 desde disco y 59 704
+  desde host). Ver `VERIFICACION.md`, sección 5.
 - La variación entre corridas fue de hasta ~20 %. El disco es virtual y el host de la VM
   puede tener caché propia, así que estos números **no** representan un NVMe físico.
 

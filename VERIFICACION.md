@@ -1,5 +1,7 @@
 # VERIFICACIÓN — 05-memoria-unificada
 
+> **Importante:** las secciones 1 a 4 corresponden al commit `7c08313`, que tenía un error de orden en el manejador de fallos. El error, su causa y la verificación del arreglo bajo carga están en la **sección 5**.
+
 Fecha: 20/10/2026 (hora de Buenos Aires, UTC-3). Máquina: VM Debian 13, kernel 6.12.94+, 8 vCPU Intel Xeon, 15 GB RAM, sin GPU.
 
 ## 1. Script completo: `./verificar.sh`
@@ -148,4 +150,114 @@ $ nvidia-smi
 nvidia-smi: command not found
 $ ls /dev/nvidia*
 ls: cannot access '/dev/nvidia*': No such file or directory
+```
+
+## 5. Incidente: `fault_secuencial` fallaba bajo carga (21/10/2026, UTC-3)
+
+### Qué pasó
+
+Una verificación independiente del commit `7c08313` falló: `./verificar.sh` salió con código 8, y en 6 corridas de `ctest` la prueba `fault_secuencial` falló 2 veces. La máquina compartida estaba muy cargada por compilaciones de otras agentes.
+
+Lo reproduje con 8 bucles ocupados en paralelo: falló **4 de 30** corridas aisladas. Siempre se veía la misma salida:
+
+```
+FALLO tests/tests.cpp:105: s.served_from_storage + s.served_from_host == 256
+[fault_secuencial] ... faults=256 resid=0 host=203 storage=52 ... dev_ev=0 host_ev=0 dev_peak=16711680
+```
+
+### Causa raíz: error real en el manejador, no en la prueba
+
+Se atendieron 256 fallos y los 16 MiB se verificaron byte por byte (los datos eran correctos), pero las estadísticas contaban 255 bloques servidos y `dev_peak` era un bloque menos (16711680 = 255 × 64 KiB).
+
+El manejador instalaba el bloque con `UFFDIO_COPY` en modo normal, y ese ioctl **despierta al hilo que falló dentro de la misma llamada**. Recién después actualizaba la contabilidad (`served_from_*`, `device_peak`, inserción en el nivel host, contadores de prefetch). Bajo carga, el hilo despertado terminaba de leer y llamaba `stats()` antes de que el hilo manejador volviera a ejecutarse, así que veía el estado del último bloque sin actualizar. Es una violación de orden real: lo que ve el consumidor (página residente) no coincidía con el estado del gestor. La aserción de la prueba era correcta.
+
+### Arreglo
+
+- `device_install()` usa ahora `UFFDIO_COPY_MODE_DONTWAKE`: instala la página sin despertar a nadie.
+- Cada camino (`service()` desde host, desde disco y fallo duplicado, y `explicit_prefetch()`) hace **toda** su contabilidad y **al final** llama `UFFDIO_WAKE`. Cuando el hilo que falló continúa, el estado ya es coherente.
+- La prueba **no se debilitó**: sigue exigiendo exactamente 256 bloques servidos.
+
+Además corregí un segundo riesgo que encontré al investigar. Las pruebas usaban nombres fijos (`t_seq.bin`, ...) en `build/`, así que dos procesos de prueba simultáneos en el mismo directorio podían truncar el archivo del otro (`O_TRUNC`) mientras estaba mapeado. Ahora cada archivo lleva el PID y se borra al salir. El benchmark usa una ruta absoluta y conserva su archivo.
+
+### Verificación del arreglo
+
+Después del arreglo, `fault_secuencial` pasó 60/60 corridas aisladas con 8 bucles ocupados, y 4 corridas simultáneas en el mismo directorio pasaron todas. Antes había fallado 4 de 30.
+
+Campaña completa con `stress-ng --cpu 8` corriendo en paralelo todo el tiempo (script en el mismo orden que abajo):
+
+```
+== carga: stress-ng --cpu 8 (pid 894116); loadavg: 21.34 12.06 6.79 34/2006 894182
+Release ctest: 20/20 en verde
+ASan+UBSan ctest: 5/5 en verde
+TSan ctest: 5/5 en verde
+verificar.sh corrida 1 (bajo carga): exit=0
+verificar.sh corrida 2 (bajo carga): exit=0
+loadavg al final: 16.47 19.20 15.76 20/1550 1030274
+== FIN campaña
+```
+
+Salida completa de la 2.ª corrida de `./verificar.sh` bajo carga:
+
+```
+== entorno
+6.12.94+
+g++ (Debian 14.2.0-19) 14.2.0
+cmake version 3.31.6
+vm.unprivileged_userfaultfd=0
+crw------- 1 root root 10, 257 Oct 14 23:50 /dev/userfaultfd
+== compilación Release (-Wall -Wextra -Wpedantic -Werror)
+[ 42%] Built target tiermem
+[100%] Built target tiermem_tests
+[100%] Built target tiermem_bench
+== ctest corrida 1
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  14.55 sec
+== ctest corrida 2
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  14.94 sec
+== ctest corrida 3
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  11.75 sec
+== ASan + UBSan
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  19.14 sec
+== ThreadSanitizer
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  32.34 sec
+== como root (modo userfaultfd completo)
+modo=completo (syscall userfaultfd) write()=4096 errno=0
+OK   syscall_sobre_rango
+15
+== FIN
+```
+
+### Benchmark después del arreglo
+
+Medido sin `stress-ng`, pero con la máquina cargada por otras agentes (loadavg ≈ 14 al empezar y ≈ 9,5 al terminar). El `UFFDIO_WAKE` extra no cambia de forma medible las filas limitadas por CPU: 4 KiB desde disco da 26 545–30 619 fallos/s y 4 KiB desde host 59 704 fallos/s, en línea con las corridas 1 y 2. Las filas limitadas por disco bajaron, pero la referencia sin userfaultfd también bajó (secuencial 1 MiB 1,600 GB/s contra 1,73–1,87), lo que indica contención en el disco compartido.
+
+```
+creando /workspace/sistemas/05-memoria-unificada/build/bench.bin (1024 MiB)...
+hilos hardware: 8  liburing compilado: si
+modo userfaultfd: UFFD_USER_MODE_ONLY (sin privilegios)
+
+backend    bloque  patron origen    pf   hil     fallos     fallos/s      GB/s       seg
+pread      4096    secu   nvme      0    1       262144        26545     0.109     9.876
+pread      65536   secu   nvme      0    1        16384         8508     0.558     1.926
+pread      65536   secu   nvme      8    1        16384         7416     0.486     2.209
+io_uring   65536   secu   nvme      8    1        16384         5953     0.390     2.752
+pread      1048576 secu   nvme      0    1         1024          599     0.628     1.709
+io_uring   1048576 secu   nvme      4    1         1024          873     0.915     1.173
+pread      4096    aleat  nvme      0    1        94345        30619     0.125     3.081
+io_uring   4096    aleat  nvme      0    1        94345        26462     0.108     3.565
+pread      65536   aleat  nvme      0    1        15402         6432     0.422     2.394
+pread      65536   aleat  nvme      0    8        15338         8811     0.577     1.741
+pread      4096    aleat  host      0    1        93830        59704     0.245     1.572
+pread      65536   aleat  host      0    1        15369        25607     1.678     0.600
+pread      65536   aleat  host      0    8        15314        17498     1.146     0.875
+
+Referencia sin userfaultfd (pread O_DIRECT directo, 1 hilo):
+  secuencial 64 KiB: 0.987 GB/s
+  secuencial 1 MiB:  1.600 GB/s
+  aleatorio 4 KiB:   0.270 GB/s
+  aleatorio 64 KiB:  1.151 GB/s
 ```

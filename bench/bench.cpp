@@ -86,6 +86,10 @@ static double raw_pread(const std::string& path, std::size_t chunk, bool random,
 
 int main(int argc, char** argv) {
     std::string path = argc > 1 ? argv[1] : "bench.bin";
+    if (!path.starts_with("/")) {  // ruta absoluta: make_file no le agrega PID ni lo borra
+        char cwd[4096];
+        if (getcwd(cwd, sizeof cwd)) path = std::string(cwd) + "/" + path;
+    }
     std::uint64_t mib = argc > 2 ? std::strtoull(argv[2], nullptr, 10) : 1024;
     if (access(path.c_str(), R_OK) != 0) {
         std::printf("creando %s (%llu MiB)...\n", path.c_str(), (unsigned long long)mib);

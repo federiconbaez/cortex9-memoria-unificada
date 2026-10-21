@@ -190,14 +190,18 @@ struct TierManager::Impl {
         while (!device_ring.empty() && s_dev_bytes.load() + chunk() > cfg.device_capacity_bytes)
             device_evict_one();
     }
-    // Copia buf al bloque k (UFFDIO_COPY) y despierta a los hilos que esperan.
+    // Copia buf al bloque k (UFFDIO_COPY) SIN despertar a los hilos que esperan.
+    // Quien llama debe terminar toda su contabilidad y recién después llamar wake(k):
+    // así, cuando el hilo que falló continúa, las estadísticas y el estado ya son
+    // coherentes con lo que ve (antes se despertaba dentro del ioctl y el hilo podía
+    // leer stats() antes de que el manejador las actualizara).
     void device_install(Key k, const void* buf) {
         device_make_room();
         uffdio_copy c{};
         c.dst = reinterpret_cast<std::uintptr_t>(chunk_addr(k));
         c.src = reinterpret_cast<std::uintptr_t>(buf);
         c.len = chunk();
-        c.mode = 0;
+        c.mode = UFFDIO_COPY_MODE_DONTWAKE;
         for (;;) {
             if (ioctl(uffd, UFFDIO_COPY, &c) == 0) break;
             if (errno == EAGAIN && c.copy > 0) {  // copia parcial: continuar
@@ -269,6 +273,7 @@ struct TierManager::Impl {
             host_touch(f->second);
             device_install(k, f->second->buf);
             ++s_from_host;
+            wake(k);
             return;
         }
         // Del almacenamiento, junto con la lectura anticipada secuencial.
@@ -289,6 +294,7 @@ struct TierManager::Impl {
             host_insert(keys[i], bufs[i], true);
             ++s_prefetched;
         }
+        wake(k);  // último paso: toda la contabilidad ya está hecha
     }
 
     void explicit_prefetch(Key k) {
@@ -304,6 +310,7 @@ struct TierManager::Impl {
             host_insert(k, b[0], false);
         }
         ++s_prefetched;
+        wake(k);  // por si algún hilo ya estaba esperando este bloque
     }
 
     bool lookup(std::uintptr_t addr, Key* out) {

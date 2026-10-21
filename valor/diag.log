@@ -1,0 +1,9 @@
+== diag TSan
+cat: /proc/sys/vm/mmap_rnd_bits: Permission denied
+FATAL: ThreadSanitizer: unexpected memory mapping 0x76ec7a072000-0x76ec7a500000
+-- con setarch -R (sin ASLR, sin root):
+100% tests passed, 0 tests failed out of 15
+100% tests passed, 0 tests failed out of 15
+100% tests passed, 0 tests failed out of 15
+0
+== diag cuFile

@@ -1,0 +1,20 @@
+== 2026-10-21 00:22:00 -03 reps 3-5 sólo aleat, mismos parámetros (W=1536 B=256 MemoryMax=303M, 600 accesos)
+RES metodo=swap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=55.551 p99_ms=844.625 max_ms=993.419 GBps=0.012 swap_cgroup_MiB=1548 errores=0 total_s=51.39
+# tiermem uffd=UFFD_USER_MODE_ONLY (sin privilegios) backend=pread+O_DIRECT dev=128MiB host=128MiB
+RES metodo=tiermem patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=17.176 p99_ms=40.954 max_ms=45.752 GBps=0.062 swap_cgroup_MiB=0 errores=0 total_s=10.27
+# tiermem faults=555 storage=538 host=17 dev_ev=427 peak_dev_MiB=128
+RES metodo=mmap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=27.270 p99_ms=102.812 max_ms=761.708 GBps=0.026 swap_cgroup_MiB=12 errores=0 total_s=24.49
+RES metodo=explicit patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=8.089 p99_ms=25.244 max_ms=38.022 GBps=0.108 swap_cgroup_MiB=0 errores=0 total_s=5.91
+RES metodo=swap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=72.498 p99_ms=1009.026 max_ms=1287.538 GBps=0.010 swap_cgroup_MiB=1548 errores=0 total_s=60.58
+# tiermem uffd=UFFD_USER_MODE_ONLY (sin privilegios) backend=pread+O_DIRECT dev=128MiB host=128MiB
+RES metodo=tiermem patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=17.409 p99_ms=33.864 max_ms=40.768 GBps=0.064 swap_cgroup_MiB=0 errores=0 total_s=9.85
+# tiermem faults=548 storage=535 host=13 dev_ev=420 peak_dev_MiB=128
+RES metodo=mmap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=43.506 p99_ms=100.226 max_ms=521.499 GBps=0.023 swap_cgroup_MiB=12 errores=0 total_s=27.11
+RES metodo=explicit patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=11.073 p99_ms=26.208 max_ms=54.287 GBps=0.090 swap_cgroup_MiB=0 errores=0 total_s=7.07
+RES metodo=swap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=66.689 p99_ms=809.641 max_ms=1046.723 GBps=0.011 swap_cgroup_MiB=1548 errores=0 total_s=55.37
+# tiermem uffd=UFFD_USER_MODE_ONLY (sin privilegios) backend=pread+O_DIRECT dev=128MiB host=128MiB
+RES metodo=tiermem patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=12.439 p99_ms=24.636 max_ms=73.174 GBps=0.086 swap_cgroup_MiB=0 errores=0 total_s=7.43
+# tiermem faults=553 storage=539 host=14 dev_ev=425 peak_dev_MiB=128
+RES metodo=mmap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=35.514 p99_ms=67.802 max_ms=560.889 GBps=0.032 swap_cgroup_MiB=12 errores=0 total_s=19.88
+RES metodo=explicit patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=15.516 p99_ms=31.291 max_ms=39.467 GBps=0.065 swap_cgroup_MiB=0 errores=0 total_s=9.72
+== FIN 00:31:14

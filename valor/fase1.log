@@ -1,0 +1,63 @@
+== 2026-10-21 00:05:30 -03 host=host-de-pruebas user=usuario-de-pruebas kernel=[kernel-redactado]
+== swap / cgroup
+Filename				Type		Size		Used		Priority
+/swap.img                               file		8388604		0		-2
+               total        used        free      shared  buff/cache   available
+Mem:           31887       13120        9202         756       10773       18766
+Swap:           8191           0        8191
+0::/user.slice/user-UID.slice/user@UID.service/app.slice/[redactado].scope
+controladores delegados en /sys/fs/cgroup/user.slice/user-UID.slice/user@UID.service: cpu memory pids
+XDG_RUNTIME_DIR=/run/user/UID  bus: srw-rw-rw- 1 usuario-de-pruebas usuario-de-pruebas 0 Oct 20 19:05 /run/user/UID/bus
+prueba scope: cgroup=/user.slice/user-UID.slice/user@UID.service/app.slice/[redactado].scope memory.max=67108864 swap.max=max
+systemd-run rc=0
+== compilación Release (-Werror), liburing: ausente
+[ 42%] Built target tiermem
+[ 85%] Built target tiermem_bench
+[100%] Built target tiermem_tests
+-- ctest Release corrida 1
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  26.87 sec
+-- ctest Release corrida 2
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  24.72 sec
+-- ctest Release corrida 3
+100% tests passed, 0 tests failed out of 15
+Total Test time (real) =  24.71 sec
+-- fault_secuencial x20
+fault_secuencial 20/20
+== ASan+UBSan
+100% tests passed, 0 tests failed out of 15
+== TSan
+ 1/15 Test  #1: backend_pread ....................***Failed    0.04 sec
+ 3/15 Test  #3: fault_secuencial .................***Failed    0.01 sec
+ 4/15 Test  #4: fault_aleatorio ..................***Failed    0.01 sec
+ 5/15 Test  #5: cola_no_multiplo .................***Failed    0.01 sec
+ 6/15 Test  #6: expulsion_bajo_presion ...........***Failed    0.01 sec
+ 7/15 Test  #7: nivel_host .......................***Failed    0.01 sec
+ 8/15 Test  #8: prefetch_secuencial ..............***Failed    0.01 sec
+ 9/15 Test  #9: prefetch_explicito ...............***Failed    0.01 sec
+10/15 Test #10: multihilo ........................***Failed    0.01 sec
+12/15 Test #12: varios_tensores ..................***Failed    0.01 sec
+13/15 Test #13: solo_lectura_sigsegv .............***Failed    0.01 sec
+14/15 Test #14: syscall_sobre_rango ..............***Failed    0.01 sec
+15/15 Test #15: sin_nivel_host ...................***Failed    0.01 sec
+7% tests passed, 14 tests failed out of 15
+	  1 - backend_pread (Failed)
+	  3 - fault_secuencial (Failed)
+	  4 - fault_aleatorio (Failed)
+	  5 - cola_no_multiplo (Failed)
+	  6 - expulsion_bajo_presion (Failed)
+	  7 - nivel_host (Failed)
+	  8 - prefetch_secuencial (Failed)
+	  9 - prefetch_explicito (Failed)
+	 10 - multihilo (Failed)
+	 12 - varios_tensores (Failed)
+	 13 - solo_lectura_sigsegv (Failed)
+	 14 - syscall_sobre_rango (Failed)
+	 15 - sin_nivel_host (Failed)
+== compilación del esqueleto cuFile (sólo compila; GDS: sin /dev/nvidia-fs)
+cufile build rc=2
+== binario GPU (nvcc Cuda compilation tools, release 12.9, V12.9.86)
+nvcc rc=0
+gen_file ok
+== FIN fase 1 00:07:45

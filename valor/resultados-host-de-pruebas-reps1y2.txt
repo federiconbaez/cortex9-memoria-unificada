@@ -1,0 +1,23 @@
+== 2026-10-21 00:11:09 -03 W=1536MiB presupuesto=256MiB reps=5 aleat=600 accesos secu=1536 accesos
+NVIDIA GeForce RTX 3060, 580.167.08, 419 MiB, 25 %
+base CUDA=31MiB -> MemoryMax=303M
+RES metodo=swap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=49.162 p99_ms=141.720 max_ms=208.785 GBps=0.023 swap_cgroup_MiB=1548 errores=0 total_s=27.63
+RES metodo=tiermem patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=13.577 p99_ms=26.452 max_ms=40.325 GBps=0.082 swap_cgroup_MiB=0 errores=0 total_s=7.79
+# tiermem faults=558 storage=543 host=15 dev_ev=430 peak_dev_MiB=128
+RES metodo=mmap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=70.993 p99_ms=106.214 max_ms=245.484 GBps=0.017 swap_cgroup_MiB=12 errores=0 total_s=37.40
+RES metodo=explicit patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=6.413 p99_ms=26.134 max_ms=30.213 GBps=0.130 swap_cgroup_MiB=0 errores=0 total_s=4.95
+RES metodo=swap patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=50.655 p99_ms=147.432 max_ms=581.584 GBps=0.018 swap_cgroup_MiB=1548 errores=0 total_s=89.24
+RES metodo=tiermem patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=0.661 p99_ms=82.427 max_ms=113.977 GBps=0.099 swap_cgroup_MiB=0 errores=0 total_s=16.47
+# tiermem faults=1536 storage=308 host=1228 dev_ev=1408 peak_dev_MiB=128
+RES metodo=mmap patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=34.128 p99_ms=75.653 max_ms=267.258 GBps=0.032 swap_cgroup_MiB=12 errores=0 total_s=50.49
+RES metodo=explicit patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=4.515 p99_ms=27.059 max_ms=38.629 GBps=0.133 swap_cgroup_MiB=0 errores=0 total_s=12.31
+RES metodo=swap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=60.170 p99_ms=263.354 max_ms=811.868 GBps=0.017 swap_cgroup_MiB=1548 errores=0 total_s=37.43
+RES metodo=tiermem patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=10.981 p99_ms=23.072 max_ms=27.048 GBps=0.097 swap_cgroup_MiB=0 errores=0 total_s=6.59
+# tiermem faults=561 storage=544 host=17 dev_ev=433 peak_dev_MiB=128
+RES metodo=mmap patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=35.886 p99_ms=58.381 max_ms=66.265 GBps=0.033 swap_cgroup_MiB=12 errores=0 total_s=19.25
+RES metodo=explicit patron=aleat W_MiB=1536 accesos=600 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=10.782 p99_ms=20.461 max_ms=22.320 GBps=0.094 swap_cgroup_MiB=0 errores=0 total_s=6.76
+RES metodo=swap patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=68.240 p99_ms=276.868 max_ms=795.618 GBps=0.013 swap_cgroup_MiB=1548 errores=0 total_s=124.94
+RES metodo=tiermem patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=0.681 p99_ms=71.902 max_ms=91.449 GBps=0.092 swap_cgroup_MiB=0 errores=0 total_s=17.69
+# tiermem faults=1536 storage=308 host=1228 dev_ev=1408 peak_dev_MiB=128
+RES metodo=mmap patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=39.661 p99_ms=70.409 max_ms=924.061 GBps=0.026 swap_cgroup_MiB=12 errores=0 total_s=62.42
+RES metodo=explicit patron=secu W_MiB=1536 accesos=1536 presupuesto_MiB=256 base_cgroup_MiB=25 p50_ms=4.413 p99_ms=16.938 max_ms=22.449 GBps=0.183 swap_cgroup_MiB=0 errores=0 total_s=9.02

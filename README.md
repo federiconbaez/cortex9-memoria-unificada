@@ -1,5 +1,11 @@
 # 05 · Memoria unificada por software (tiermem)
 
+> **ES:** Gestor de memoria por niveles en C++20 (GPU/RAM/disco) para Linux. Compilar/probar: `cmake -B build && cmake --build build && ./verificar.sh`.
+> **EN:** C++20 tiered memory manager (GPU/RAM/disk) for Linux. Build/test: `cmake -B build && cmake --build build && ./verificar.sh`.
+>
+> **Estado / Status (AUDIT-valor.md):** **PASA el umbral #5 en acceso aleatorio / PASSES threshold #5 on random access** (n=5, todas las parejas ≤ 0,19× del p99 del swap). Secuencial: no robusto (n=2, una corrida 0,56×). No le gana al paginado explícito (`pread`). Nivel B+. Licencia / License: Apache-2.0.
+
+
 Gestor de memoria por niveles en C++20 para Linux. Reserva un rango virtual por cada
 tensor (archivo en disco) y atiende los **fallos de página con `userfaultfd`**: cuando
 el programa toca una dirección que no está cargada, un hilo manejador lee ese bloque del

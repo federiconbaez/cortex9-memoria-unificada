@@ -1,3 +1,5 @@
+> Nota (2026-10-22): el historial se reescribió y los hashes citados aquí son anteriores; ver [docs/HASHES.md](docs/HASHES.md). / History was rewritten; hashes cited here are pre-rewrite, see docs/HASHES.md.
+
 # Auditoría del experimento de valor del sistema 5 (tiermem) — Research Sentinel
 
 Fecha: 21/10/2026 (UTC-3). Auditoría hecha sólo en la box, sobre lo versionado. No se ejecutó nada en `host-de-pruebas`.
